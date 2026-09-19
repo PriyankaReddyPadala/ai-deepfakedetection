@@ -1,6 +1,5 @@
 # Data & models — too big for git, delivered separately
 data/
-backend/saved_models/*
 !backend/saved_models/.gitkeep
 
 # Python

@@ -1,0 +1,14 @@
+{
+  "model": "EfficientNetB0",
+  "input_size": [
+    32,
+    32
+  ],
+  "labels": {
+    "0": "FAKE",
+    "1": "REAL"
+  },
+  "preprocessing": "RGB, resize to 32x32, keep values 0-255 (no rescaling)",
+  "output": "sigmoid, P(REAL)",
+  "test_accuracy": 0.8560500144958496
+}
