@@ -4,11 +4,15 @@
     32,
     32
   ],
+  "backbone_input_size": [
+    128,
+    128
+  ],
   "labels": {
     "0": "FAKE",
     "1": "REAL"
   },
-  "preprocessing": "RGB, resize to 32x32, keep values 0-255 (no rescaling)",
+  "preprocessing": "RGB, resize to 32x32, keep values 0-255 (no rescaling); model upsamples internally",
   "output": "sigmoid, P(REAL)",
-  "test_accuracy": 0.7116000056266785
+  "test_accuracy": 0.9366
 }
