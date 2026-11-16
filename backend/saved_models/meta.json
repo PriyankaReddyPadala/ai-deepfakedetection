@@ -1,18 +1,15 @@
 {
   "model": "EfficientNetB0",
+  "dataset": "Real vs Fake Faces (RVF10K) + Tiny-GenImage validation split",
   "input_size": [
-    32,
-    32
-  ],
-  "backbone_input_size": [
-    128,
-    128
+    224,
+    224
   ],
   "labels": {
     "0": "FAKE",
     "1": "REAL"
   },
-  "preprocessing": "RGB, resize to 32x32, keep values 0-255 (no rescaling); model upsamples internally",
+  "preprocessing": "RGB, resize to 224x224, keep values 0-255 (no rescaling)",
   "output": "sigmoid, P(REAL)",
-  "test_accuracy": 0.9366
+  "test_accuracy": 0.9041176470588236
 }
