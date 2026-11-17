@@ -23,7 +23,9 @@ function App() {
     try {
       setResult(await predictImage(file))
     } catch (err) {
-      setError(err.message)
+      setError(err.message === 'Failed to fetch'
+        ? 'Cannot reach the server. Please make sure the backend is running.'
+        : err.message)
     } finally {
       setLoading(false)
     }
@@ -77,7 +79,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>Trained on CIFAKE (Stable Diffusion vs CIFAR-10) — see README for limitations</p>
+        <p>Trained on real vs AI faces (RVF10K) and general images (Tiny-GenImage) — see README for limitations</p>
       </footer>
     </div>
   )

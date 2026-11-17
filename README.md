@@ -41,6 +41,10 @@ Measured on **1,700 test images** the model never saw during training:
 | **v6 (final)** | **Faces + general images (224×224)** | **90.4%** | Clear, realistic images, 8+ AI generators |
 | v7 | Faces + general images | 87.9% | Added blur/noise augmentation, lower accuracy, so v6 kept |
 
+**Server fix (after v6):** the server originally resized uploads with Pillow, which smooths (antialiases) large images,
+while training used `tf.image.resize`, which does not. The model read the extra smoothness as an AI feature, so many real photos
+were classified as fake in the app. The server now resizes exactly like training, and real photos are classified correctly far more often.
+
 **Why the final model has a lower number than v4:** v4's 93.7% was measured on blurry 32×32 images.
 When tested on real-world photos, it failed (for example, it called a modern AI-generated portrait 100% real).
 v6 is trained and tested on clear, varied images from many AI generators, so its 90.4% reflects real-world use much better.
@@ -83,7 +87,7 @@ removes duplicates, and makes an 80 / 10 / 10 train / validation / test split.
 | Item | Details |
 |---|---|
 | Architecture | EfficientNetB0 (pretrained on ImageNet) + global average pooling + dropout (0.2) + sigmoid output |
-| Input | 224 × 224 RGB, pixel values 0–255 (normalisation is built into the model) |
+| Input | 224 × 224 RGB, resized with `tf.image.resize` (bilinear) in both training and the server, pixel values 0–255 (normalisation is built into the model) |
 | Output | Probability that the image is real (label 0 = FAKE, 1 = REAL) |
 | Training | Phase 1: 1 epoch, backbone frozen (Adam, lr 1e-3). Phase 2: 3 epochs, full fine-tuning (AdamW, cosine decay from 2e-4, weight decay 1e-4) |
 | Regularisation | Dropout, early stopping, weight decay, BatchNorm frozen during fine-tuning |
@@ -108,7 +112,7 @@ ai-deepfakedetection/
 │   ├── app/
 │   │   ├── main.py              # FastAPI app (loads the model at startup)
 │   │   ├── api/predict.py       # /api/predict and /api/model-info endpoints
-│   │   ├── services/detector.py # preprocessing + prediction
+│   │   ├── services/detector.py # preprocessing (same resize as training) + prediction
 │   │   └── core/config.py       # paths, upload limits, CORS
 │   ├── saved_models/
 │   │   ├── model.keras          # final model used by the app (v6)
@@ -122,6 +126,7 @@ ai-deepfakedetection/
 │   │   ├── model_training_v4.ipynb            # v4
 │   │   ├── model_training_v6_faces_general.ipynb  # v6 (final)
 │   │   ├── model_training_v7.ipynb            # v7 experiment
+│   │   ├── export_test_images.py              # exports unseen test images for demos
 │   │   └── dataset/                           # not in git (see Dataset setup)
 │   └── requirements.txt
 └── frontend/
@@ -165,6 +170,19 @@ Open http://localhost:5173 and upload an image.
    (Keep NumPy below 2.0 for TensorFlow 2.16; newer PyArrow versions require NumPy 2.)
 3. Open `backend/train/model_training_v6_faces_general.ipynb` and run all cells (about 20–30 minutes on an Apple M-series MacBook).
 4. The notebook backs up the previous model and saves the new `model.keras` and `meta.json` to `backend/saved_models/`. Restart the backend to use it.
+
+### 4. Demo images (optional)
+
+To demo the app fairly, use images the model never saw during training. This script rebuilds the exact v6 train / test split
+and saves 100 **test** images (25 real faces, 25 fake faces, 25 real general, 25 fake general) to `~/Desktop/demo_test_images/`:
+
+```bash
+cd backend
+source .venv/bin/activate
+python train/export_test_images.py
+```
+
+The datasets must be set up exactly as for v6 (faces + the 4 validation parquet files) for the split to match.
 
 ---
 
