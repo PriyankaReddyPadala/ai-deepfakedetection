@@ -19,12 +19,16 @@ class Detector:
         self.model.predict(dummy, verbose=0)
 
     def predict(self, image: Image.Image) -> dict:
-        """Preprocess must EXACTLY match training: RGB, resize 32x32, values 0-255."""
+        """Preprocess must EXACTLY match training: RGB, tf.image.resize to INPUT_SIZE, values 0-255."""
         start = time.perf_counter()
 
-        img = image.convert("RGB").resize(INPUT_SIZE, Image.Resampling.BILINEAR)
-        arr = np.asarray(img, dtype=np.float32)      # 0-255, NO rescaling
-        arr = np.expand_dims(arr, axis=0)
+        # Resize EXACTLY like training: tf.image.resize (bilinear, no antialiasing),
+        # then round to uint8 like the training pipeline. Pillow's resize smooths
+        # (antialiases) large images, which the model reads as "AI-like" texture.
+        img = np.asarray(image.convert("RGB"), dtype=np.uint8)
+        t = tf.image.resize(img, INPUT_SIZE)                       # float32, values 0-255
+        t = tf.cast(tf.clip_by_value(t, 0, 255), tf.uint8)
+        arr = tf.cast(t, tf.float32)[tf.newaxis, ...].numpy()       # 0-255, NO rescaling
 
         p = float(self.model.predict(arr, verbose=0).ravel()[0])   # P(REAL)
 
